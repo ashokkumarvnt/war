@@ -1,0 +1,26 @@
+pipeline {
+    agent any
+    tools {
+        maven 'maven 3'
+    }
+    stages {
+        stage('clone the git') {
+            steps {
+                git 'https://github.com/ashokkumarvnt/war.git'
+            }
+        }     
+        
+        stage('mvn build') {
+            steps {
+                sh 'mvn clean install'
+            }
+        }
+
+        stage(push to s3) {
+            steps{
+                sh'cp target/war.war target/war-v$BUILD_ID-$BUILD_TIMESTAMP.war'
+                s3Upload consoleLogLevel: 'INFO', dontSetBuildResultOnFailure: false, dontWaitForConcurrentBuildCompletion: false, entries: [[bucket: 'cuteecomputer', excludedFile: '', flatten: false, gzipFiles: false, keepForever: false, managedArtifacts: false, noUploadOnFailure: false, selectedRegion: 'ap-south-1', showDirectlyInBrowser: false, sourceFile: '**/* .war', storageClass: 'STANDARD', uploadFromSlave: false, useServerSideEncryption: false]], pluginFailureResultConstraint: 'UNSTABLE', profileName: 's3-devops', userMetadata: []
+            }
+        }
+    }
+}
